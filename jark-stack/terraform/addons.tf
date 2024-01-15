@@ -54,6 +54,23 @@ module "ebs_csi_driver_irsa" {
 }
 
 #---------------------------------------------------------------
+# IRSA for EFS CSI Driver
+#---------------------------------------------------------------
+module "efs_csi_driver_irsa" {
+  source                = "terraform-aws-modules/iam/aws//modules/iam-role-for-service-accounts-eks"
+  version               = "~> 5.20"
+  role_name_prefix      = format("%s-%s-", local.name, "efs-csi-driver")
+  attach_efs_csi_policy = true
+  oidc_providers = {
+    main = {
+      provider_arn               = module.eks.oidc_provider_arn
+      namespace_service_accounts = ["kube-system:efs-csi-controller-sa"]
+    }
+  }
+  tags = local.tags
+}
+
+#---------------------------------------------------------------
 # EKS Blueprints Addons
 #---------------------------------------------------------------
 module "eks_blueprints_addons" {
@@ -81,6 +98,10 @@ module "eks_blueprints_addons" {
     # VPC CNI uses worker node IAM role policies
     vpc-cni = {
       preserve = true
+    }
+    # Add EFS driver as EKS AddOn
+    aws-efs-csi-driver = {
+      service_account_role_arn = module.efs_csi_driver_irsa.iam_role_arn
     }
   }
 
