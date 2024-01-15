@@ -63,10 +63,6 @@ singleuser:
           key: token
   storage:
     capacity: 100Gi
-    type: "static"
-    static:
-      pvcName: "efs-claim"
-      subPath: "home/{username}" # mounted as singleuser.storage.homeMountPath which defaults to `/home/jovyan`
     extraVolumes:
       - name: shm-volume
         emptyDir:
@@ -76,14 +72,14 @@ singleuser:
           name: notebook
       - name: efs
         persistentVolumeClaim:
-          claimName: efs-tmp-claim
+          claimName: efs-claim
     extraVolumeMounts:
       - name: shm-volume
         mountPath: /dev/shm
       - name: notebook
         mountPath: /home/jovyan/dogbooth
       - name: efs
-        mountPath: /data/tmp
+        mountPath: /home/jovyan/efs
 scheduling:
   userScheduler:
     enabled: false
