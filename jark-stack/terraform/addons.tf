@@ -97,13 +97,13 @@ module "eks_blueprints_addons" {
     }]
   }
 
-  #---------------------------------------
-  # Ingress Nginx Add-on
-  #---------------------------------------
-  enable_ingress_nginx = true
-  ingress_nginx = {
-    values = [templatefile("${path.module}/helm-values/ingress-nginx-values.yaml", {})]
-  }
+  # #---------------------------------------
+  # # Ingress Nginx Add-on
+  # #---------------------------------------
+  # enable_ingress_nginx = true
+  # ingress_nginx = {
+  #   values = [templatefile("${path.module}/helm-values/ingress-nginx-values.yaml", {})]
+  # }
 
   helm_releases = {
     #---------------------------------------
