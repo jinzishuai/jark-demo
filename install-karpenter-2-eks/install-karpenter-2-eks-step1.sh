@@ -137,6 +137,11 @@ aws iam put-role-policy --role-name KarpenterControllerRole-${CLUSTER_NAME} \
     --policy-name KarpenterControllerPolicy-${CLUSTER_NAME} \
     --policy-document file://controller-policy.json
 
+# Add an additional policy
+aws iam put-role-policy --role-name KarpenterControllerRole-${CLUSTER_NAME} \
+    --policy-name  additional-instance-policies \
+    --policy-document file://additional-instance-policies.json
+
 # 6. tag subnets 
 
 for NODEGROUP in $(aws eks list-nodegroups --cluster-name ${CLUSTER_NAME} \
