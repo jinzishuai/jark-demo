@@ -46,7 +46,7 @@ spec:
     - tags:
         karpenter.sh/discovery: "${CLUSTER_NAME}" # replace with your cluster name
   tags:                  
-    "cwi:team": devops
+    "karpenter.sh/noodpool": gpu
   # Optional, configures storage devices for the instance
   blockDeviceMappings:
     - deviceName: /dev/xvda
