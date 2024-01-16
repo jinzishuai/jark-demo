@@ -7,6 +7,7 @@ export AWS_DEFAULT_REGION=$region
 targets=(
   "module.vpc"
   "module.eks"
+  "module.efs"
 )
 
 # Initialize Terraform
