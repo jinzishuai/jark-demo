@@ -31,6 +31,7 @@ affinity:
       - topologyKey: "kubernetes.io/hostname"
 ```
 Note that the `core-node-group-2024011516012728040000000f` from the existing core node groups of the EKS cluster. The we only need to insert the section containing `matchExpressions` for `nodegroup`.
+
 5. Run the last script: `./install-karpenter-2-eks-step5.sh`: this finishes the installation.
 
 # Using Karpenter
