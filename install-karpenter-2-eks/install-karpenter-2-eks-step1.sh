@@ -220,10 +220,14 @@ aws iam put-role-policy --role-name KarpenterControllerRole-${CLUSTER_NAME} \
 echo "6. tag the EKS subnets"
 
 for NODEGROUP in $(aws eks list-nodegroups --cluster-name ${CLUSTER_NAME} \
-    --query 'nodegroups' --output text); do aws ec2 create-tags \
-        --tags "Key=karpenter.sh/discovery,Value=${CLUSTER_NAME}" \
-        --resources $(aws eks describe-nodegroup --cluster-name ${CLUSTER_NAME} \
+    --query 'nodegroups' --output text)
+do 
+    SUBNETS=$(aws eks describe-nodegroup --cluster-name ${CLUSTER_NAME} \
         --nodegroup-name $NODEGROUP --query 'nodegroup.subnets' --output text )
+    aws ec2 create-tags \
+        --tags "Key=karpenter.sh/discovery,Value=${CLUSTER_NAME}" \
+        --resources $SUBNETS
+    echo "tag subnets $SUBNETS for NodeGroup $NODEGROUP"
 done
 
 # 7. tag NSGs (first nodegroup only)
