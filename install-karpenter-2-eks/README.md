@@ -3,13 +3,13 @@
 Following https://medium.com/@shadracktanui47/setup-karpenter-on-your-existing-eks-cluster-98bf6e959863
 
 1. Run script `./install-karpenter-2-eks-step1.sh` to prepare
-2. Update `aws-auth` config map to have
+2. Update `aws-auth` config map to insert the following to the `data.mapRoles` field:
 ```yaml
-- groups:
-  - system:bootstrappers
-  - system:nodes
-  rolearn: <Paste the KarpenterNodeRole full ARN here>
-  username: system:node:{{EC2PrivateDNSName}}
+    - groups:
+      - system:bootstrappers
+      - system:nodes
+      rolearn: <Paste the KarpenterNodeRole full ARN here>
+      username: system:node:{{EC2PrivateDNSName}}
 ```
 3. Geneatte Karpenter Helm template: `./install-karpenter-2-eks-step3.sh`: it will generate `karpenter.yaml`
 4. Modify helm chart genearated manifest file `karpenter.yaml` to have the affinity for the `karpenter` deployment.
