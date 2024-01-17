@@ -13,6 +13,7 @@ export OIDC_ENDPOINT="$(aws eks describe-cluster --name ${CLUSTER_NAME} \
     --query "cluster.identity.oidc.issuer" --output text)"
 
 # step 1: create IAM roles
+echo "1. create IAM role KarpenterNodeRole-${CLUSTER_NAME}"
 
 echo '{
     "Version": "2012-10-17",
@@ -31,6 +32,7 @@ aws iam create-role --role-name "KarpenterNodeRole-${CLUSTER_NAME}" \
     --assume-role-policy-document file://node-trust-policy.json
 
 # 2. attach policies
+echo "2. attach role policies to  KarpenterNodeRole-${CLUSTER_NAME}"
 
 aws iam attach-role-policy --role-name "KarpenterNodeRole-${CLUSTER_NAME}" \
     --policy-arn arn:${AWS_PARTITION}:iam::aws:policy/AmazonEKSWorkerNodePolicy
@@ -45,6 +47,7 @@ aws iam attach-role-policy --role-name "KarpenterNodeRole-${CLUSTER_NAME}" \
     --policy-arn arn:${AWS_PARTITION}:iam::aws:policy/AmazonSSMManagedInstanceCore
 
 # 3. create instance profile
+echo "3. create instance profile KarpenterNodeInstanceProfile-${CLUSTER_NAME} on KarpenterNodeRole-${CLUSTER_NAME}"
 
 aws iam create-instance-profile \
    --instance-profile-name KarpenterNodeInstanceProfile-${CLUSTER_NAME}
@@ -54,6 +57,7 @@ aws iam add-role-to-instance-profile \
    --role-name KarpenterNodeRole-${CLUSTER_NAME}
    
 # 4. Karpenter control role
+echo "4. create KarpenterControllerRole-${CLUSTER_NAME} trust relationship with ${OIDC_ENDPOINT}"
 
 cat << EOF > controller-trust-policy.json
 {
@@ -78,6 +82,9 @@ EOF
 
 aws iam create-role --role-name KarpenterControllerRole-${CLUSTER_NAME} \
     --assume-role-policy-document file://controller-trust-policy.json
+
+# 5. policies for KarpenterControllerRole
+echo "5. setting two policies for KarpenterControllerRole-${CLUSTER_NAME}"
 
 cat << EOF > controller-policy.json
 {
@@ -138,17 +145,89 @@ aws iam put-role-policy --role-name KarpenterControllerRole-${CLUSTER_NAME} \
     --policy-document file://controller-policy.json
 
 # Add an additional policy
+
+cat <<EOF > additional-instance-policies.json
+{
+  "Statement": [
+    {
+      "Sid": "AllowScopedInstanceProfileCreationActions",
+      "Effect": "Allow",
+      "Resource": "*",
+      "Action": ["iam:CreateInstanceProfile"],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestTag/kubernetes.io/cluster/${CLUSTER_NAME}": "owned",
+          "aws:RequestTag/topology.kubernetes.io/region": "${AWS_REGION}"
+        },
+        "StringLike": {
+          "aws:RequestTag/karpenter.k8s.aws/ec2nodeclass": "*"
+        }
+      }
+    },
+    {
+      "Sid": "AllowScopedInstanceProfileTagActions",
+      "Effect": "Allow",
+      "Resource": "*",
+      "Action": ["iam:TagInstanceProfile"],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/kubernetes.io/cluster/${CLUSTER_NAME}": "owned",
+          "aws:ResourceTag/topology.kubernetes.io/region": "${AWS_REGION}",
+          "aws:RequestTag/kubernetes.io/cluster/${CLUSTER_NAME}": "owned",
+          "aws:RequestTag/topology.kubernetes.io/region": "${AWS_REGION}"
+        },
+        "StringLike": {
+          "aws:ResourceTag/karpenter.k8s.aws/ec2nodeclass": "*",
+          "aws:RequestTag/karpenter.k8s.aws/ec2nodeclass": "*"
+        }
+      }
+    },
+    {
+      "Sid": "AllowScopedInstanceProfileActions",
+      "Effect": "Allow",
+      "Resource": "*",
+      "Action": [
+        "iam:AddRoleToInstanceProfile",
+        "iam:RemoveRoleFromInstanceProfile",
+        "iam:DeleteInstanceProfile"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/kubernetes.io/cluster/${CLUSTER_NAME}": "owned",
+          "aws:ResourceTag/topology.kubernetes.io/region": "${AWS_REGION}"
+        },
+        "StringLike": {
+          "aws:ResourceTag/karpenter.k8s.aws/ec2nodeclass": "*"
+        }
+      }
+    },
+    {
+      "Sid": "AllowInstanceProfileReadActions",
+      "Effect": "Allow",
+      "Resource": "*",
+      "Action": "iam:GetInstanceProfile"
+    }
+  ],
+  "Version": "2012-10-17"
+}
+EOF
+
 aws iam put-role-policy --role-name KarpenterControllerRole-${CLUSTER_NAME} \
     --policy-name  additional-instance-policies \
     --policy-document file://additional-instance-policies.json
 
 # 6. tag subnets 
+echo "6. tag the EKS subnets"
 
 for NODEGROUP in $(aws eks list-nodegroups --cluster-name ${CLUSTER_NAME} \
-    --query 'nodegroups' --output text); do aws ec2 create-tags \
-        --tags "Key=karpenter.sh/discovery,Value=${CLUSTER_NAME}" \
-        --resources $(aws eks describe-nodegroup --cluster-name ${CLUSTER_NAME} \
+    --query 'nodegroups' --output text)
+do 
+    SUBNETS=$(aws eks describe-nodegroup --cluster-name ${CLUSTER_NAME} \
         --nodegroup-name $NODEGROUP --query 'nodegroup.subnets' --output text )
+    aws ec2 create-tags \
+        --tags "Key=karpenter.sh/discovery,Value=${CLUSTER_NAME}" \
+        --resources $SUBNETS
+    echo "tag subnets $SUBNETS for NodeGroup $NODEGROUP"
 done
 
 # 7. tag NSGs (first nodegroup only)
@@ -175,3 +254,5 @@ SECURITY_GROUPS=$(aws ec2 describe-launch-template-versions \
 aws ec2 create-tags \
     --tags "Key=karpenter.sh/discovery,Value=${CLUSTER_NAME}" \
     --resources ${SECURITY_GROUPS}
+
+echo "7. tag security groups: ${SECURITY_GROUPS}"

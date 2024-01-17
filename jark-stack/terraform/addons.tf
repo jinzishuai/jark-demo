@@ -165,6 +165,9 @@ module "data_addons" {
   # KubeRay Operator Add-on
   #---------------------------------------------------------------
   enable_kuberay_operator = true
+  kuberay_operator_helm_config = {
+    version = "1.0.0"
+  }
 
   depends_on = [
     kubernetes_secret_v1.huggingface_token,

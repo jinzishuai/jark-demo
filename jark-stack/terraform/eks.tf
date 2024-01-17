@@ -128,7 +128,7 @@ module "eks" {
     #   max_size     = 1
     #   desired_size = 1
 
-    #   instance_types = ["g5.12xlarge"]
+    #   instance_types = ["g5.xlarge"]
 
     #   labels = {
     #     WorkerType    = "ON_DEMAND"
