@@ -146,7 +146,7 @@ aws iam put-role-policy --role-name KarpenterControllerRole-${CLUSTER_NAME} \
 
 # Add an additional policy
 
-echo <<EOF > additional-instance-policies.json
+cat <<EOF > additional-instance-policies.json
 {
   "Statement": [
     {
