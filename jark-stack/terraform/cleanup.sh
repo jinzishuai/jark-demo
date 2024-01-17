@@ -21,7 +21,8 @@ targets=(
   "module.data_addons"
   "module.eks_blueprints_addons"
   "module.eks"
-  "module.vpc"
+  "module.efs"
+  "module.vpc"  
 )
 
 # Destroy modules in sequence
