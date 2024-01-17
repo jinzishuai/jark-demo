@@ -145,6 +145,73 @@ aws iam put-role-policy --role-name KarpenterControllerRole-${CLUSTER_NAME} \
     --policy-document file://controller-policy.json
 
 # Add an additional policy
+
+echo <<EOF > additional-instance-policies.json
+{
+  "Statement": [
+    {
+      "Sid": "AllowScopedInstanceProfileCreationActions",
+      "Effect": "Allow",
+      "Resource": "*",
+      "Action": ["iam:CreateInstanceProfile"],
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestTag/kubernetes.io/cluster/${CLUSTER_NAME}": "owned",
+          "aws:RequestTag/topology.kubernetes.io/region": "${AWS_REGION}"
+        },
+        "StringLike": {
+          "aws:RequestTag/karpenter.k8s.aws/ec2nodeclass": "*"
+        }
+      }
+    },
+    {
+      "Sid": "AllowScopedInstanceProfileTagActions",
+      "Effect": "Allow",
+      "Resource": "*",
+      "Action": ["iam:TagInstanceProfile"],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/kubernetes.io/cluster/${CLUSTER_NAME}": "owned",
+          "aws:ResourceTag/topology.kubernetes.io/region": "${AWS_REGION}",
+          "aws:RequestTag/kubernetes.io/cluster/${CLUSTER_NAME}": "owned",
+          "aws:RequestTag/topology.kubernetes.io/region": "${AWS_REGION}"
+        },
+        "StringLike": {
+          "aws:ResourceTag/karpenter.k8s.aws/ec2nodeclass": "*",
+          "aws:RequestTag/karpenter.k8s.aws/ec2nodeclass": "*"
+        }
+      }
+    },
+    {
+      "Sid": "AllowScopedInstanceProfileActions",
+      "Effect": "Allow",
+      "Resource": "*",
+      "Action": [
+        "iam:AddRoleToInstanceProfile",
+        "iam:RemoveRoleFromInstanceProfile",
+        "iam:DeleteInstanceProfile"
+      ],
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/kubernetes.io/cluster/${CLUSTER_NAME}": "owned",
+          "aws:ResourceTag/topology.kubernetes.io/region": "${AWS_REGION}"
+        },
+        "StringLike": {
+          "aws:ResourceTag/karpenter.k8s.aws/ec2nodeclass": "*"
+        }
+      }
+    },
+    {
+      "Sid": "AllowInstanceProfileReadActions",
+      "Effect": "Allow",
+      "Resource": "*",
+      "Action": "iam:GetInstanceProfile"
+    }
+  ],
+  "Version": "2012-10-17"
+}
+EOF
+
 aws iam put-role-policy --role-name KarpenterControllerRole-${CLUSTER_NAME} \
     --policy-name  additional-instance-policies \
     --policy-document file://additional-instance-policies.json
