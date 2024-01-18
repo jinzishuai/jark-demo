@@ -34,6 +34,14 @@ Note that the value of `core-node-group-2024011516012728040000000f` comes from t
 
 5. Run the last script: `./install-karpenter-2-eks-step5.sh`: this finishes the installation.
 
+## Note About Recreation
+
+- [delete-karpenter-roles.sh](delete-karpenter-roles.sh) is incomplete as it won't delete the IAM roles until the policies are deleted or detached. The AWS console is able to easily delete them without the additional trouble.  But the script can still be useful to detach and delete the instance profile.
+- [install-karpenter-2-eks-step1.sh](install-karpenter-2-eks-step1.sh) can be re-run when needed and some steps might fail since the resource already exists. But in many cases that is okay.
+- If the EKS is recreated, the OIDC URL would have changed. We will have to recreate at least the `KarpenterControllerRole` role and also retag the subnets and security groups. In this case,
+  - First run [delete-karpenter-roles.sh](delete-karpenter-roles.sh) and delete the two Karpenter IAM roles in AWS console.
+  - Then follow the above procedures, starting with running [install-karpenter-2-eks-step1.sh](install-karpenter-2-eks-step1.sh) again.
+
 # Using Karpenter
 
 ## Define the Default NodePool and EC2NodeClass for CPU instances
