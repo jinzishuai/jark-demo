@@ -17,7 +17,8 @@ spec:
           values: ["on-demand"]
         - key: node.kubernetes.io/instance-type
           operator: In
-          values: ["g5.xlarge", "g5.2xlarge", "g5.4xlarge", "g5.8xlarge", "g5.12xlarge"]
+          values:
+          - g5.xlarge
       nodeClassRef:
         name: gpu
       # Provisioned nodes will have these taints
