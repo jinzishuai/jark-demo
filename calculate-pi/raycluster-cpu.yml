@@ -1,0 +1,62 @@
+# example-raycluster-cpu.yaml
+apiVersion: ray.io/v1
+kind: RayCluster
+metadata:
+  name: cpu-raycluster
+  namespace: ray-cpu
+spec:
+  rayVersion: "2.9.0" # Updated to version 2.7.0
+  headGroupSpec:
+    serviceType: ClusterIP
+    rayStartParams:
+      port: "6379"
+      dashboard-host: "0.0.0.0"
+      # Setting "num-cpus: 0" to avoid any Ray actors or tasks being scheduled on the Ray head Pod.
+      num-cpus: "0"
+    template:
+      spec:
+        containers:
+          - name: ray-head
+            image: rayproject/ray:2.9.0-py311-cpu # 800 MB
+            ports:
+              - containerPort: 6379
+              - containerPort: 8265 # dashboard
+            resources:
+              requests:
+                cpu: "1"
+                memory: "1Gi"
+              limits:
+                cpu: "1"
+                memory: "1Gi"
+            volumeMounts:
+              - name: persistent-storage
+                mountPath: /home/ray/efs
+        volumes:
+          - name: persistent-storage
+            persistentVolumeClaim:
+              claimName: efs-claim-ray-cpu
+  workerGroupSpecs:
+    - groupName: worker-group
+      replicas: 1
+      minReplicas: 1
+      maxReplicas: 1
+      rayStartParams: {}
+      template:
+        spec:
+          containers:
+            - name: ray-worker
+              image: rayproject/ray:2.9.0-py311-cpu # 800 MB
+              resources:
+                requests:
+                  cpu: "1"
+                  memory: "1Gi"
+                limits:
+                  cpu: "1"
+                  memory: "1Gi"
+              volumeMounts:
+                - name: persistent-storage
+                  mountPath: /home/ray/efs
+          volumes:
+            - name: persistent-storage
+              persistentVolumeClaim:
+                claimName: efs-claim-ray-cpu
