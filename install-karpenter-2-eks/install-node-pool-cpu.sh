@@ -7,7 +7,7 @@ cat <<EOF | envsubst | kubectl apply -f -
 apiVersion: karpenter.sh/v1beta1
 kind: NodePool
 metadata:
-  name: default
+  name: cpu
 spec:
   template:
     spec:
@@ -32,7 +32,7 @@ spec:
           operator: Gt
           values: ["2"]
       nodeClassRef:
-        name: default
+        name: cpu
   limits:
     cpu: 1000
   disruption:
@@ -42,7 +42,7 @@ spec:
 apiVersion: karpenter.k8s.aws/v1beta1
 kind: EC2NodeClass
 metadata:
-  name: default
+  name: cpu
 spec:
   amiFamily: AL2 # Amazon Linux 2
   role: "KarpenterNodeRole-${CLUSTER_NAME}" # replace with your cluster name
@@ -53,7 +53,7 @@ spec:
     - tags:
         karpenter.sh/discovery: "${CLUSTER_NAME}" # replace with your cluster name
   tags:                  
-    "karpenter.sh/noodpool": default
+    "karpenter.sh/noodpool": cpu
     # Optional, configures storage devices for the instance
   blockDeviceMappings:
     - deviceName: /dev/xvda
