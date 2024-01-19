@@ -44,17 +44,17 @@ Note that the value of `core-node-group-2024011516012728040000000f` comes from t
 
 # Using Karpenter
 
-## Define the Default NodePool and EC2NodeClass for CPU instances
+## Define the CPU NodePool and EC2NodeClass for CPU instances
 
 https://karpenter.sh/docs/getting-started/getting-started-with-karpenter/#5-create-nodepool
 
 ```
-╰─❯ ./install-node-pool-default.sh 
-nodepool.karpenter.sh/default created
-ec2nodeclass.karpenter.k8s.aws/default created
+╰─❯ ./install-node-pool-cpu.sh 
+nodepool.karpenter.sh/cpu created
+ec2nodeclass.karpenter.k8s.aws/cpu created
 ```
 
-## Define the Default NodePool and EC2NodeClass for GPU instances
+## Define the GPU NodePool and EC2NodeClass for GPU instances
 
 ```
 ╰─❯ ./install-node-pool-gpu.sh    

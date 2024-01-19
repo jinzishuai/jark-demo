@@ -1,0 +1,59 @@
+apiVersion: ray.io/v1
+kind: RayCluster
+metadata:
+  name: gpu-raycluster
+  namespace: ray-gpu
+spec:
+  rayVersion: "2.8.1" # Ray version to use
+  headGroupSpec:
+    serviceType: ClusterIP
+    rayStartParams:
+      port: "6379"
+      dashboard-host: "0.0.0.0"
+      # Setting "num-cpus: 0" to avoid any Ray actors or tasks being scheduled on the Ray head Pod.
+      num-cpus: "0"
+    template:
+      spec:
+        containers:
+          - name: ray-head
+            image: jinzishuai/ray-train-dreambooth:2.9.0-py310-gpu
+            ports:
+              - containerPort: 6379
+              - containerPort: 8265 # dashboard
+            resources:
+              requests:
+                cpu: "2"
+                memory: "4Gi"
+              limits:
+                cpu: "2"
+                memory: "4Gi"
+            volumeMounts:
+              - name: persistent-storage
+                mountPath: /home/ray/efs
+        volumes:
+          - name: persistent-storage
+            persistentVolumeClaim:
+              claimName: efs-claim-ray-gpu
+  workerGroupSpecs:
+    - groupName: gpu-wg
+      replicas: 2
+      minReplicas: 2
+      maxReplicas: 2
+      rayStartParams: {}
+      template:
+        spec:
+          containers:
+            - name: ray-worker
+              image: jinzishuai/ray-train-dreambooth:2.9.0-py310-gpu
+              resources:
+                requests:
+                  nvidia.com/gpu: "1" # each worker node should be a g5.xlarge
+                limits:
+                  nvidia.com/gpu: "1"
+              volumeMounts:
+                - name: persistent-storage
+                  mountPath: /home/ray/efs
+          volumes:
+            - name: persistent-storage
+              persistentVolumeClaim:
+                claimName: efs-claim-ray-gpu
