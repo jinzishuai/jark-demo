@@ -34,7 +34,7 @@ aws ec2 describe-volumes --filters "Name=tag:Name,Values=jark*"
 
 echo
 echo "list of all EC2 instances ..."
-aws ec2 describe-instances
+aws ec2 describe-instances --query "Reservations[].Instances[?State.Name!='terminated']"
 
 echo
 echo "list of all Elastic IPs ..."
