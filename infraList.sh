@@ -27,3 +27,19 @@ aws kms list-aliases --query 'Aliases[?contains(AliasName, `jark`)]'
 echo 
 echo "list of jark CloudWatch Logs log group ..."
 aws logs describe-log-groups --query "logGroups[?contains(logGroupName, 'jark')]"
+
+echo
+echo "list of jark EBS volumes ..."
+aws ec2 describe-volumes --filters "Name=tag:Name,Values=jark*"
+
+echo
+echo "list of all EC2 instances ..."
+aws ec2 describe-instances
+
+echo
+echo "list of all Elastic IPs ..."
+aws ec2 describe-addresses
+
+echo
+echo "list of all Launch Templates ..."
+aws ec2 describe-launch-templates
