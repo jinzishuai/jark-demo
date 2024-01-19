@@ -1,0 +1,3 @@
+-r dreambooth/requirements.txt
+ray
+pyarrow
