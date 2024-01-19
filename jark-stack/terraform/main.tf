@@ -1,3 +1,11 @@
+terraform {
+  backend "s3" {
+    bucket                  = "aitok-terraform-states"
+    key                     = "jark-stack-tf-state"
+    region                  = "ap-east-1"
+  }
+}
+
 provider "aws" {
   region = local.region
 }
