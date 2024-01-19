@@ -22,6 +22,7 @@ aws iam list-roles --query "Roles[?starts_with(RoleName,'Karpenter')]"
 echo 
 echo "list of jark alias KMS keys ..."
 aws kms list-aliases --query 'Aliases[?contains(AliasName, `jark`)]'
+# to delete the kms key: delete the alias and then set it for deletion pending at least 7 days.
 
 echo 
 echo "list of jark CloudWatch Logs log group ..."
