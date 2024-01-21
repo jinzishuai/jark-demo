@@ -1,5 +1,13 @@
 #!/bin/bash
 
+read -p "this will destroy everyting, including data on EFS. Are you sure (y/n)?" proceed
+if [ $proceed == y ]; then
+  echo "ok, let's proceed..." 
+else
+  echo "good idea. abort now!"
+  exit 0
+fi
+
 read -p "Enter the region: " region
 export AWS_DEFAULT_REGION=$region
 
