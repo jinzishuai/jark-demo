@@ -33,8 +33,8 @@ echo "list of jark EBS volumes ..."
 aws ec2 describe-volumes --filters "Name=tag:Name,Values=jark*"
 
 echo
-echo "list of all EC2 instances ..."
-aws ec2 describe-instances --query "Reservations[].Instances[?State.Name!='terminated']"
+echo "list of all non-terminated EC2 instances ..."
+aws ec2 describe-instances --filters "Name=instance-state-name,Values=pending,running,shutting-down,stopping,stopped"
 
 echo
 echo "list of all Elastic IPs ..."
