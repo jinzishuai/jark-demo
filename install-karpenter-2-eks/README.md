@@ -1,3 +1,5 @@
+This is the code for [Part 3: Autoscaling with Karpenter](https://medium.com/@shijin_35411/jark-stack-for-generative-ai-part-3-255f1d441c18).
+
 # Install Karpenter 0.33.0 on an Existing EKS-1.28
 
 Following https://medium.com/@shadracktanui47/setup-karpenter-on-your-existing-eks-cluster-98bf6e959863
