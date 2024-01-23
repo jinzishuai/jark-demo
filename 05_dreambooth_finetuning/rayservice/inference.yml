@@ -11,9 +11,8 @@ spec:
         import_path: 05_dreambooth_finetuning.rayservice.stable_diffusion:entrypoint
         runtime_env:
           working_dir: "https://github.com/jinzishuai/jark-demo/archive/master.zip"
-          env_var:
-            - name: MODEL_PATH
-              value: "/home/ray/efs/src/jark-demo/05_dreambooth_finetuning/data/model-orig/models--stabilityai--stable-diffusion-2-1/snapshots/5cae40e6a2745ae2b01ad92ae5043f95f23644d6"
+          env_vars:
+            MODEL_PATH: "/home/ray/efs/src/jark-demo/05_dreambooth_finetuning/data/model-orig/models--stabilityai--stable-diffusion-2-1/snapshots/5cae40e6a2745ae2b01ad92ae5043f95f23644d6"
         deployments:
           - name: APIIngress
             ray_actor_options:
@@ -23,9 +22,8 @@ spec:
         import_path: 05_dreambooth_finetuning.rayservice.stable_diffusion:entrypoint
         runtime_env:
           working_dir: "https://github.com/jinzishuai/jark-demo/archive/master.zip"
-          env_var:
-            - name: MODEL_PATH
-              value: "/home/ray/efs/src/jark-demo/05_dreambooth_finetuning/data/model-tuned"
+          env_vars:
+            MODEL_PATH: "/home/ray/efs/src/jark-demo/05_dreambooth_finetuning/data/model-tuned"
         deployments:
           - name: APIIngress
             ray_actor_options:
