@@ -17,7 +17,7 @@ spec:
         deployments:
           - name: APIIngress
             ray_actor_options:
-              num_cpus: 0.1          
+              num_cpus: 0        
       - name: tuned_dreambooth
         route_prefix: /tuned
         import_path: 05_dreambooth_finetuning.rayservice.stable_diffusion:entrypoint
@@ -29,7 +29,7 @@ spec:
         deployments:
           - name: APIIngress
             ray_actor_options:
-              num_cpus: 0.1
+              num_cpus: 0
   serviceUnhealthySecondThreshold: 600
   deploymentUnhealthySecondThreshold: 600
   rayClusterConfig:
@@ -39,8 +39,7 @@ spec:
       rayStartParams:
         dashboard-host: "0.0.0.0"
         # Setting "num-cpus: 0" to avoid any Ray actors or tasks being scheduled on the Ray head Pod.
-        # use 0.2 to just run the two API services
-        num-cpus: "0.2"
+        num-cpus: "0"
       template:
         spec:
           containers:
@@ -70,7 +69,7 @@ spec:
           volumes:
             - name: persistent-storage
               persistentVolumeClaim:
-                claimName: efs-claim
+                claimName: efs-claim-ray-gpu
     workerGroupSpecs:
       - replicas: 0
         minReplicas: 0
@@ -84,8 +83,10 @@ spec:
                 image: jinzishuai/ray-train-dreambooth:2.9.0-py310-gpu
                 resources:
                   limits:
+                    cpu: 3
                     nvidia.com/gpu: 1 # 1 fits within a g5.xlarge instance in AWS
                   requests:
+                    cpu: 3
                     nvidia.com/gpu: 1
                 volumeMounts:
                   - name: persistent-storage
@@ -93,4 +94,4 @@ spec:
             volumes:
               - name: persistent-storage
                 persistentVolumeClaim:
-                  claimName: efs-claim
+                  claimName: efs-claim-ray-gpu
