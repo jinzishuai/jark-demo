@@ -1,0 +1,96 @@
+apiVersion: ray.io/v1alpha1
+kind: RayService
+metadata:
+  name: dreambooth-inference
+  namespace: ray-gpu
+spec:
+  serveConfigV2: |
+    applications:
+      - name: original_stable_diffusion
+        route_prefix: /original
+        import_path: 05_dreambooth_finetuning.rayservice.stable_diffusion:entrypoint
+        runtime_env:
+          working_dir: "https://github.com/jinzishuai/jark-demo/archive/master.zip"
+          env_var:
+            - name: MODEL_PATH
+              value: "/home/ray/efs/src/jark-demo/05_dreambooth_finetuning/data/model-orig/models--stabilityai--stable-diffusion-2-1/snapshots/5cae40e6a2745ae2b01ad92ae5043f95f23644d6"
+        deployments:
+          - name: APIIngress
+            ray_actor_options:
+              num_cpus: 0.1          
+      - name: tuned_dreambooth
+        route_prefix: /tuned
+        import_path: 05_dreambooth_finetuning.rayservice.stable_diffusion:entrypoint
+        runtime_env:
+          working_dir: "https://github.com/jinzishuai/jark-demo/archive/master.zip"
+          env_var:
+            - name: MODEL_PATH
+              value: "/home/ray/efs/src/jark-demo/05_dreambooth_finetuning/data/model-tuned"
+        deployments:
+          - name: APIIngress
+            ray_actor_options:
+              num_cpus: 0.1
+  serviceUnhealthySecondThreshold: 600
+  deploymentUnhealthySecondThreshold: 600
+  rayClusterConfig:
+    rayVersion: "2.9.0"
+    enableInTreeAutoscaling: true
+    headGroupSpec:
+      rayStartParams:
+        dashboard-host: "0.0.0.0"
+        # Setting "num-cpus: 0" to avoid any Ray actors or tasks being scheduled on the Ray head Pod.
+        # use 0.2 to just run the two API services
+        num-cpus: "0.2"
+      template:
+        spec:
+          containers:
+            - name: ray-head
+              image: jinzishuai/ray-train-dreambooth:2.9.0-py310-gpu
+              resources:
+                limits:
+                  cpu: 2 # 4 CPUs requires g5.2xlarge., 3 CPUs fits in g5.xlarge
+                  memory: 4Gi
+                  nvidia.com/gpu: 0
+                requests:
+                  cpu: 2
+                  memory: 4Gi
+                  nvidia.com/gpu: 0 # 1 fits within a g5.xlarge instance in AWS
+              ports:
+                - containerPort: 6379
+                  name: gcs-server
+                - containerPort: 8265
+                  name: dashboard
+                - containerPort: 10001
+                  name: client
+                - containerPort: 8000
+                  name: serve
+              volumeMounts:
+                - name: persistent-storage
+                  mountPath: /home/ray/efs
+          volumes:
+            - name: persistent-storage
+              persistentVolumeClaim:
+                claimName: efs-claim
+    workerGroupSpecs:
+      - replicas: 0
+        minReplicas: 0
+        maxReplicas: 2
+        rayStartParams: {}
+        groupName: gpu-group
+        template:
+          spec:
+            containers:
+              - name: ray-worker
+                image: jinzishuai/ray-train-dreambooth:2.9.0-py310-gpu
+                resources:
+                  limits:
+                    nvidia.com/gpu: 1 # 1 fits within a g5.xlarge instance in AWS
+                  requests:
+                    nvidia.com/gpu: 1
+                volumeMounts:
+                  - name: persistent-storage
+                    mountPath: /home/ray/efs
+            volumes:
+              - name: persistent-storage
+                persistentVolumeClaim:
+                  claimName: efs-claim
